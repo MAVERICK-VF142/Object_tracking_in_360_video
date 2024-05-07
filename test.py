@@ -5,8 +5,15 @@ from ultralytics import YOLO
 model = YOLO('yolov8n.pt')
 
 # Open the video file
-video_path = "path/to/video.mp4"
-cap = cv2.VideoCapture(0)
+video_path = "test.mp4"
+cap = cv2.VideoCapture(video_path)
+
+# Get the width and height of the video frames
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+# Create a display window
+cv2.namedWindow("YOLOv8 Tracking", cv2.WINDOW_NORMAL)
 
 # Loop through the video frames
 while cap.isOpened():
@@ -20,8 +27,11 @@ while cap.isOpened():
         # Visualize the results on the frame
         annotated_frame = results[0].plot()
 
-        # Display the annotated frame
-        cv2.imshow("YOLOv8 Tracking", annotated_frame)
+        # Resize the frame to fit within the window
+        resized_frame = cv2.resize(annotated_frame, (frame_width, frame_height))
+
+        # Display the resized frame
+        cv2.imshow("YOLOv8 Tracking", resized_frame)
 
         # Break the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord("q"):
