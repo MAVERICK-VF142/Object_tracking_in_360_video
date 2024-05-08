@@ -13,12 +13,43 @@ cap = cv2.VideoCapture(video_path)
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-# Define output frame dimensions for normal FOV projection
-output_width = 2024  # Adjust as needed
-output_height = 2880  # Adjust as needed
+# Define the field of view (FOV) for different perspectives
+fov_degrees = {
+    'front': 90,   # Front perspective
+    'back': 90,    # Back perspective
+    'left': 90,    # Left perspective
+    'right': 90    # Right perspective
+}
+
+# Define function to transform frame based on selected perspective
+def transform_perspective(frame, perspective):
+    # Define the region of interest (ROI) for the selected perspective
+    if perspective == 'front':
+        fov_center = {'x': frame_width // 2, 'y': frame_height // 2}
+    elif perspective == 'back':
+        fov_center = {'x': frame_width // 2, 'y': frame_height // 2}
+    elif perspective == 'left':
+        fov_center = {'x': frame_width // 4, 'y': frame_height // 2}
+    elif perspective == 'right':
+        fov_center = {'x': 3 * frame_width // 4, 'y': frame_height // 2}
+    else:
+        raise ValueError("Invalid perspective")
+
+    # Calculate the width and height of the FOV based on the FOV degrees
+    fov_width = int(frame_width * fov_degrees[perspective] / 360)
+    fov_height = int(frame_height * fov_degrees[perspective] / 360)
+    
+    # Apply perspective projection to the frame
+    perspective_frame = frame[fov_center['y'] - fov_height // 2: fov_center['y'] + fov_height // 2,
+                              fov_center['x'] - fov_width // 2: fov_center['x'] + fov_width // 2]
+
+    return perspective_frame
 
 # Create a display window
 cv2.namedWindow("YOLOv8 Tracking", cv2.WINDOW_NORMAL)
+
+# Initialize perspective as 'front'
+current_perspective = 'front'
 
 # Loop through the video frames
 while cap.isOpened():
@@ -26,33 +57,33 @@ while cap.isOpened():
     success, frame = cap.read()
 
     if success:
-        # Placeholder for determining the current viewing angle or position within the 360 video
-        # For demonstration purposes, let's assume a fixed viewing angle
-        viewing_angle = 360  # Modify this value based on actual viewing angle or position determination
-
-        # Placeholder for computing remap parameters based on the current viewing angle or position
-        # For demonstration purposes, let's assume we have fixed remap parameters here
-        map_x, map_y = cv2.initUndistortRectifyMap(np.eye(3), None, None, np.eye(3),
-                                                    (output_width, output_height), cv2.CV_32FC1)
-
-        # Remap the frame from equirectangular to normal FOV
-        normal_fov_frame = cv2.remap(frame, map_x, map_y, cv2.INTER_LINEAR)
-
+        # Transform the frame based on the current perspective
+        transformed_frame = transform_perspective(frame, current_perspective)
+        
         # Run YOLOv8 tracking on the frame, persisting tracks between frames
-        results = model.track(normal_fov_frame, persist=True)
+        results = model.track(transformed_frame, persist=True)
 
         # Visualize the results on the frame
         annotated_frame = results[0].plot()
 
         # Resize the frame to fit within the window
-        resized_frame = cv2.resize(annotated_frame, (output_width, output_height))
+        resized_frame = cv2.resize(annotated_frame, (frame_width, frame_height))
 
         # Display the resized frame
         cv2.imshow("YOLOv8 Tracking", resized_frame)
 
-        # Break the loop if 'q' is pressed
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        # Check for key press to switch perspective
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
             break
+        elif key == ord("f"):
+            current_perspective = 'front'
+        elif key == ord("b"):
+            current_perspective = 'back'
+        elif key == ord("l"):
+            current_perspective = 'left'
+        elif key == ord("r"):
+            current_perspective = 'right'
     else:
         # Break the loop if the end of the video is reached
         break
