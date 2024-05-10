@@ -98,9 +98,6 @@ while cap.isOpened():
             # Print the centroid coordinates
             print("Centroid Coordinates (x, y):", cX, cY)
 
-            # Draw the centroid on the frame
-            cv2.circle(frame, (cX, cY), 5, (0, 255, 0), -1)
-
         # Wrap around the video for 360-degree perspective
         if current_perspective == "back":
             # Cut more from the left and right parts of the frame
