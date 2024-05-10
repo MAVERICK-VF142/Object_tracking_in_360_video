@@ -12,6 +12,10 @@ cap = cv2.VideoCapture(video_path)
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+# Define the reduced size for zoomed frame
+zoomed_width = frame_width // 10
+zoomed_height = frame_height // 5
+
 # Create a display window
 cv2.namedWindow("YOLOv8 Tracking", cv2.WINDOW_NORMAL)
 
@@ -52,11 +56,11 @@ while cap.isOpened():
                         # Draw a rectangle around the selected object
                         cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
 
-                        # Zoom in on the selected object
-                        zoom_factor = 1.5  # Reduced zoom factor
-                        zoomed_width = int((x2 - x1) * zoom_factor)
-                        zoomed_height = int((y2 - y1) * zoom_factor)
-                        zoomed_frame = frame[int(y1):int(y2), int(x1):int(x2)].copy()  # Copy the zoomed region
+                         # Zoom in on the selected object
+                        zoomed_frame = frame[int(y1):int(y2), int(x1):int(x2)]
+
+                        # Resize the zoomed frame to the reduced size
+                        zoomed_frame = cv2.resize(zoomed_frame, (zoomed_width, zoomed_height))
 
                         # Draw coordinates text on the zoomed frame
                         text = f"Coordinates: ({x1}, {y1}) - ({x2}, {y2})"
