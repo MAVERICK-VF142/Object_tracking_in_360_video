@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # Load the YOLOv8 model
-model = YOLO('yolov9c.pt')
+model = YOLO('yolov9e.pt')
 
 # Open the video file
 video_path = "test.mp4"
@@ -62,9 +62,10 @@ while cap.isOpened():
                         # Resize the zoomed frame to the reduced size
                         zoomed_frame = cv2.resize(zoomed_frame, (zoomed_width, zoomed_height))
 
-                        # Draw coordinates text on the zoomed frame
-                        text = f"Coordinates: ({x1}, {y1}) - ({x2}, {y2})"
-                        cv2.putText(zoomed_frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                       # Draw coordinates text on the zoomed frame with smaller font size
+                        text = f"Coordinates: ({x1:.3f}, {y1:.3f}) - ({x2:.3f}, {y2:.3f})"
+                        cv2.putText(zoomed_frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+
 
                         # Display the zoomed frame
                         cv2.imshow("Zoomed Frame", zoomed_frame)
