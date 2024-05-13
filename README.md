@@ -1,6 +1,3 @@
-Certainly! Here's the updated README.md with the changed GitHub repository link:
-
----
 
 # YOLOv8 Object Tracking
 
