@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
+import random  # Add this line to import the random module
 
 # Load the YOLOv8 model
 model = YOLO('yolov9e.pt')
@@ -22,7 +23,8 @@ fov_degrees = {
 }
 
 # Define the threshold for motion detection
-threshold = 130  # Adjust as needed
+threshold = random.randint(120, 140)  # Random threshold ranging from 120 to 140
+print("Threshold for motion detection:", threshold)
 
 # Define function to transform frame based on selected perspective
 def transform_perspective(frame, perspective):
