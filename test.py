@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
-import random  # Add this line to import the random module
 
 # Load the YOLOv8 model
 model = YOLO('yolov9e.pt')
@@ -16,36 +15,34 @@ frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 # Define the field of view (FOV) for different perspectives
 fov_degrees = {
-    'front': 90,   # Front perspective
-    'back': 90,    # Back perspective
-    'left': 90,    # Left perspective
-    'right': 90    # Right perspective
+    'front': 90,       # Front perspective
+    'left': 90,        # Left perspective
+    'right': 90,       # Right perspective
+    'leftmost': 90,    # Leftmost perspective
+    'rightmost': 90    # Rightmost perspective
 }
 
 # Define the threshold for motion detection
-threshold = random.randint(120, 140)  # Random threshold ranging from 120 to 140
-print("Threshold for motion detection:", threshold)
+threshold = 130  # Adjust as needed
 
 # Define function to transform frame based on selected perspective
 def transform_perspective(frame, perspective):
     if perspective == 'front':
         fov_center = {'x': frame_width // 2, 'y': frame_height // 2}
-    elif perspective == 'back':
-        fov_center = {"x": 3 * frame_width // 4, "y":frame_height // 2}
     elif perspective == 'left':
         fov_center = {'x': frame_width // 4, 'y': frame_height // 2}
     elif perspective == 'right':
         fov_center = {'x': 3 * frame_width // 4, 'y': frame_height // 2}
+    elif perspective == 'leftmost':
+        fov_center = {'x': frame_width // 8, 'y': frame_height // 2}
+    elif perspective == 'rightmost':
+        fov_center = {'x': 7 * frame_width // 8, 'y': frame_height // 2}
     else:
         raise ValueError("Invalid perspective")
 
     # Calculate the width and height of the FOV based on the FOV degrees
     fov_width = int(frame_width * fov_degrees[perspective] / 360)
     fov_height = int(frame_height * fov_degrees[perspective] / 360)
-    
-    # Adjust the FOV height for the back perspective
-    if perspective == 'back':
-        fov_height = min(frame_height, int(fov_width * frame_height / frame_width))
     
     # Apply perspective projection to the frame
     perspective_frame = frame[fov_center['y'] - fov_height // 2: fov_center['y'] + fov_height // 2,
@@ -66,7 +63,7 @@ def detect_saliency(frame, previous_frame):
     return saliency
 
 # Initialize previous frames for motion-based saliency for each perspective
-previous_frames = {'front': None, 'back': None, 'left': None, 'right': None}
+previous_frames = {'front': None, 'left': None, 'right': None, 'leftmost': None, 'rightmost': None}
 
 # Loop through the video frames
 while cap.isOpened():
@@ -75,7 +72,7 @@ while cap.isOpened():
 
     if success:
         # Initialize dictionary to store detected motion for each perspective
-        motion_detected = {'front': False, 'back': False, 'left': False, 'right': False}
+        motion_detected = {'front': False, 'left': False, 'right': False, 'leftmost': False, 'rightmost': False}
         
         # Loop through perspectives
         for perspective, previous_frame in previous_frames.items():
