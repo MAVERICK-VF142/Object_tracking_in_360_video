@@ -1,8 +1,9 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
+import random
 
-# Load the YOLOv9 model
+# Load the YOLOv8 model
 model = YOLO("yolov9e.pt")
 
 # Open the video file
@@ -22,8 +23,8 @@ fov_degrees = {
     "rightmost": 90,  # Rightmost perspective
 }
 
-# Define the threshold for motion detection
-threshold = 130  # Adjust as needed
+threshold = random.randint(120, 140)  # Random threshold ranging from 120 to 140
+print("Threshold for motion detection:", threshold)
 
 
 # Define function to transform frame based on selected perspective
@@ -105,9 +106,9 @@ while cap.isOpened():
             if saliency > threshold:
                 motion_detected[perspective] = True
 
-                # Run YOLOv9 object detection and tracking
+                # Run YOLOv8 object detection and tracking
                 results = model.track(transformed_frame, persist=True)
-
+                annotated_frame = results[0].plot()
                 # Check if results is a list (adjust the index based on your needs)
                 if isinstance(results, list) and len(results) > 0:
                     # Get the detected objects' coordinates from the first element (if results is a list)
@@ -125,25 +126,36 @@ while cap.isOpened():
                         center_y = (y1 + y2) / 2
 
                         # Map the (x, y) coordinates to 360-degree video coordinates
-                        theta = np.degrees((center_x / frame_width) * 360)  # Convert x to theta in degrees
-                        phi = np.degrees((center_y / frame_height) * 180)  # Convert y to phi in degrees
+                        theta = np.degrees(
+                            (center_x / frame_width) * 360
+                        )  # Convert x to theta in degrees
+                        phi = np.degrees(
+                            (center_y / frame_height) * 180
+                        )  # Convert y to phi in degrees
 
                         # Draw bounding box and label with formatted coordinates
-                        cv2.rectangle(transformed_frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                        cv2.putText(transformed_frame, f"{label}: {conf:.2f} [Theta: {theta:.2f}, Phi: {phi:.2f}]", (int(x1), int(y1) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                
+                        cv2.putText(
+                            annotated_frame,
+                            f"[x: {theta:.2f}, y: {phi:.2f}]",
+                            (int(x1), int(y1) - 30),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5,
+                            (0, 0, 255),
+                            2,
+                        )
+
                 # Display the annotated frame in the perspective window
                 if perspective == "rightmost":
                     # Define the region of interest to display only the right portion of the frame
-                    roi_width = transformed_frame.shape[1] // 2
+                    roi_width = annotated_frame.shape[1] // 2
                     overlap = 50  # Adjust this value for the desired overlap
-                    roi = transformed_frame[:, roi_width - overlap :, :]
+                    roi = annotated_frame[:, roi_width - overlap :, :]
 
                     # Display the ROI in the perspective window
                     cv2.imshow(f"{perspective.capitalize()} Perspective", roi)
                 else:
                     cv2.imshow(
-                        f"{perspective.capitalize()} Perspective", transformed_frame
+                        f"{perspective.capitalize()} Perspective", annotated_frame
                     )
 
             # Update the previous frame for the next iteration
