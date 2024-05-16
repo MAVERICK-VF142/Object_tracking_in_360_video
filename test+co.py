@@ -2,12 +2,13 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import random
+from collections import defaultdict
 
 # Load the YOLOv8 model
 model = YOLO("yolov9e.pt")
 
 # Open the video file
-video_path = "test.mp4"
+video_path = "Test.mp4"
 cap = cv2.VideoCapture(video_path)
 
 # Get the width and height of the video frames
@@ -25,6 +26,39 @@ fov_degrees = {
 
 threshold = random.randint(120, 140)  # Random threshold ranging from 120 to 140
 print("Threshold for motion detection:", threshold)
+
+# Initialize paths dictionary to store object paths
+paths = defaultdict(list)
+
+# Define Kalman filter parameters
+kalman_filters = {}
+
+# Define function to initialize Kalman filter for a new object
+def initialize_kalman_filter(x, y):
+    kalman = cv2.KalmanFilter(4, 2)  # 4 dimensions (x, y, dx, dy), 2 measurements (x, y)
+
+    kalman.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)
+    kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
+
+    kalman.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32) * 0.03
+    kalman.measurementNoiseCov = np.array([[1, 0], [0, 1]], np.float32) * 0.03
+
+    kalman.statePre = np.array([[x], [y], [0], [0]], np.float32)
+    
+    return kalman
+
+
+# Define function to predict object position using Kalman filter
+def predict_position(kalman):
+    prediction = kalman.predict()
+    x, y = prediction[0], prediction[1]
+    return x, y
+
+
+# Define function to update Kalman filter with new measurement
+def update_measurement(kalman, x, y):
+    measurement = np.array([[x], [y]], np.float32)
+    kalman.correct(measurement)
 
 
 # Define function to transform frame based on selected perspective
@@ -107,7 +141,7 @@ while cap.isOpened():
                 motion_detected[perspective] = True
 
                 # Run YOLOv8 object detection and tracking
-                results = model.track(transformed_frame, persist=True)
+                results = model.track(transformed_frame, persist=True, classes=[0,2,3])
                 annotated_frame = results[0].plot()
                 # Check if results is a list (adjust the index based on your needs)
                 if isinstance(results, list) and len(results) > 0:
@@ -124,6 +158,10 @@ while cap.isOpened():
                         # Calculate the center of the object
                         center_x = (x1 + x2) / 2
                         center_y = (y1 + y2) / 2
+
+                        # Add center coordinates to the paths dictionary
+                        object_id = f"{perspective}_{cls}_{conf:.2f}"
+                        paths[object_id].append((int(center_x), int(center_y)))
 
                         # Map the (x, y) coordinates to 360-degree video coordinates
                         theta = np.degrees(
@@ -143,6 +181,35 @@ while cap.isOpened():
                             (0, 0, 255),
                             2,
                         )
+
+                        # Draw the path of the object
+                        for i in range(1, len(paths[object_id])):
+                            if paths[object_id][i - 1] is None or paths[object_id][i] is None:
+                                continue
+                            cv2.line(
+                                annotated_frame,
+                                paths[object_id][i - 1],
+                                paths[object_id][i],
+                                (0, 255, 0),
+                                2,
+                            )
+
+                        # Kalman filter integration
+                        if (perspective, cls) not in kalman_filters:
+                            # Initialize Kalman filter for new object
+                            kalman_filters[(perspective, cls)] = initialize_kalman_filter(center_x, center_y)
+                        else:
+                            # Get the Kalman filter for the object
+                            kalman = kalman_filters[(perspective, cls)]
+
+                            # Predict object position
+                            predicted_x, predicted_y = predict_position(kalman)
+
+                            # Update Kalman filter with new measurement
+                            update_measurement(kalman, center_x, center_y)
+
+                            # Draw predicted position on annotated frame
+                            cv2.circle(annotated_frame, (int(predicted_x), int(predicted_y)), 5, (255, 0, 0), -1)
 
                 # Display the annotated frame in the perspective window
                 if perspective == "rightmost":
