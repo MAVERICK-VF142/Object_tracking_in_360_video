@@ -1,67 +1,52 @@
 import cv2
+import math
 import numpy as np
+import torch
 from ultralytics import YOLO
 import random
+from deep_sort_pytorch.utils.parser import get_config
+from deep_sort_pytorch.deep_sort import DeepSort
+from deep_sort_pytorch.deep_sort.sort.tracker import Tracker
 from collections import defaultdict
 
-# Load the YOLOv8 model
-model = YOLO("yolov9e.pt")
+# Check if a GPU is available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Open the video file
-video_path = "Test.mp4"
-cap = cv2.VideoCapture(video_path)
+if torch.cuda.is_available():
+    print("GPU is available. Running on GPU.")
+else:
+    print("GPU is not available. Running on CPU.")
 
-# Get the width and height of the video frames
-frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+# Load the YOLOv8 model and move it to the appropriate device
+model = YOLO("yolov9e.pt").to(device)
+class_names = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+
+deep_sort_weights = 'deep_sort_pytorch/deep_sort/deep/checkpoint/ckpt.t7'
 
 # Define the field of view (FOV) for different perspectives
 fov_degrees = {
-    "front": 90,  # Front perspective
-    "left": 90,  # Left perspective
-    "right": 90,  # Right perspective
-    "leftmost": 90,  # Leftmost perspective
-    "rightmost": 90,  # Rightmost perspective
+    "front": 90,
+    "left": 90,
+    "right": 90,
+    "leftmost": 90,
+    "rightmost": 90,
 }
 
-threshold = random.randint(120, 140)  # Random threshold ranging from 120 to 140
+threshold = random.randint(120, 140)
 print("Threshold for motion detection:", threshold)
 
-# Initialize paths dictionary to store object paths
-paths = defaultdict(list)
+# Initialize previous frames for motion-based saliency for each perspective
+previous_frames = {
+    "front": None,
+    "left": None,
+    "right": None,
+    "leftmost": None,
+    "rightmost": None,
+}
 
-# Define Kalman filter parameters
-kalman_filters = {}
+# Initialize dictionary to store centroid history for each track and each FOV
+centroid_history = defaultdict(lambda: defaultdict(list))
 
-# Define function to initialize Kalman filter for a new object
-def initialize_kalman_filter(x, y):
-    kalman = cv2.KalmanFilter(4, 2)  # 4 dimensions (x, y, dx, dy), 2 measurements (x, y)
-
-    kalman.measurementMatrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], np.float32)
-    kalman.transitionMatrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32)
-
-    kalman.processNoiseCov = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], np.float32) * 0.03
-    kalman.measurementNoiseCov = np.array([[1, 0], [0, 1]], np.float32) * 0.03
-
-    kalman.statePre = np.array([[x], [y], [0], [0]], np.float32)
-    
-    return kalman
-
-
-# Define function to predict object position using Kalman filter
-def predict_position(kalman):
-    prediction = kalman.predict()
-    x, y = prediction[0], prediction[1]
-    return x, y
-
-
-# Define function to update Kalman filter with new measurement
-def update_measurement(kalman, x, y):
-    measurement = np.array([[x], [y]], np.float32)
-    kalman.correct(measurement)
-
-
-# Define function to transform frame based on selected perspective
 def transform_perspective(frame, perspective):
     if perspective == "front":
         fov_center = {"x": frame_width // 2, "y": frame_height // 2}
@@ -76,11 +61,9 @@ def transform_perspective(frame, perspective):
     else:
         raise ValueError("Invalid perspective")
 
-    # Calculate the width and height of the FOV based on the FOV degrees
     fov_width = int(frame_width * fov_degrees[perspective] / 360)
     fov_height = int(frame_height * fov_degrees[perspective] / 360)
 
-    # Apply perspective projection to the frame
     perspective_frame = frame[
         fov_center["y"] - fov_height // 2 : fov_center["y"] + fov_height // 2,
         fov_center["x"] - fov_width // 2 : fov_center["x"] + fov_width // 2,
@@ -88,65 +71,55 @@ def transform_perspective(frame, perspective):
 
     return perspective_frame
 
-
-# Function for motion-based saliency detection
 def detect_saliency(frame, previous_frame):
-    # Check if previous_frame is not None and has non-zero size
     if previous_frame is None or previous_frame.size == 0:
         return 0
-
-    # Resize the previous frame to match the size of the current frame
-    previous_frame_resized = cv2.resize(
-        previous_frame, (frame.shape[1], frame.shape[0])
-    )
-    # Compute the saliency based on the difference between the frames
+    previous_frame_resized = cv2.resize(previous_frame, (frame.shape[1], frame.shape[0]))
     saliency = np.mean(np.abs(frame - previous_frame_resized))
     return saliency
 
-
-# Initialize previous frames for motion-based saliency for each perspective
-previous_frames = {
-    "front": None,
-    "left": None,
-    "right": None,
-    "leftmost": None,
-    "rightmost": None,
+# Initialize dictionary to store trackers for each perspective
+trackers = {
+    "front": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "left": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "right": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "leftmost": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "rightmost": DeepSort(model_path=deep_sort_weights,max_age=5),
 }
 
-# Loop through the video frames
+colors = [(255,0,255)]
+
+motion_detected = {"front": False, "left": False, "right": False, "leftmost": False, "rightmost": False}
+
+# Open the video file
+video_path = "Test.mp4"
+cap = cv2.VideoCapture(video_path)
+
+# Get the width and height of the video frames
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
 while cap.isOpened():
-    # Read a frame from the video
     success, frame = cap.read()
 
     if success:
-        # Initialize dictionary to store detected motion for each perspective
-        motion_detected = {
-            "front": False,
-            "left": False,
-            "right": False,
-            "leftmost": False,
-            "rightmost": False,
-        }
-
-        # Loop through perspectives
         for perspective, previous_frame in previous_frames.items():
-            # Transform the frame based on the current perspective
             transformed_frame = transform_perspective(frame, perspective)
-
-            # Detect motion-based saliency for the transformed frame
             saliency = detect_saliency(transformed_frame, previous_frame)
 
-            # If motion is detected, set the flag for the perspective
             if saliency > threshold:
                 motion_detected[perspective] = True
+                print("Saliency detected")
 
-                # Run YOLOv8 object detection and tracking
-                results = model.track(transformed_frame, persist=True, classes=[0,2,3])
-                annotated_frame = results[0].plot()
-                # Check if results is a list (adjust the index based on your needs)
+                # Get the corresponding tracker for the current perspective
+                tracker = trackers[perspective]
+
+                # Perform object detection
+                results = model(transformed_frame, classes=[0, 2, 3], device=device)
+
                 if isinstance(results, list) and len(results) > 0:
                     # Get the detected objects' coordinates from the first element (if results is a list)
-                    coordinates = results[0].boxes
+                    coordinates = results[0].boxes.cpu().numpy()
 
                     # Loop through the detected objects
                     for coord in coordinates:
@@ -161,7 +134,6 @@ while cap.isOpened():
 
                         # Add center coordinates to the paths dictionary
                         object_id = f"{perspective}_{cls}_{conf:.2f}"
-                        paths[object_id].append((int(center_x), int(center_y)))
 
                         # Map the (x, y) coordinates to 360-degree video coordinates
                         theta = np.degrees(
@@ -173,7 +145,7 @@ while cap.isOpened():
 
                         # Draw bounding box and label with formatted coordinates
                         cv2.putText(
-                            annotated_frame,
+                            transformed_frame,
                             f"[x: {theta:.2f}, y: {phi:.2f}]",
                             (int(x1), int(y1) - 30),
                             cv2.FONT_HERSHEY_SIMPLEX,
@@ -182,61 +154,58 @@ while cap.isOpened():
                             2,
                         )
 
-                        # Draw the path of the object
-                        for i in range(1, len(paths[object_id])):
-                            if paths[object_id][i - 1] is None or paths[object_id][i] is None:
-                                continue
-                            cv2.line(
-                                annotated_frame,
-                                paths[object_id][i - 1],
-                                paths[object_id][i],
-                                (0, 255, 0),
-                                2,
-                            )
 
-                        # Kalman filter integration
-                        if (perspective, cls) not in kalman_filters:
-                            # Initialize Kalman filter for new object
-                            kalman_filters[(perspective, cls)] = initialize_kalman_filter(center_x, center_y)
-                        else:
-                            # Get the Kalman filter for the object
-                            kalman = kalman_filters[(perspective, cls)]
+                for result in results:
+                    boxes = result.boxes  # Boxes object for bbox outputs
+                    conf = boxes.conf
+                    xywh = boxes.xywh  # box with xywh format, (N, 4)
+                
+                conf = conf.detach().cpu().numpy()
+                bboxes_xywh = xywh
+                bboxes_xywh = xywh.cpu().numpy()
+                bboxes_xywh = np.array(bboxes_xywh, dtype=float)
+                
+                tracks = tracker.update(bboxes_xywh, conf, transformed_frame, previous_frame)  # Include original frame
 
-                            # Predict object position
-                            predicted_x, predicted_y = predict_position(kalman)
+                # Loop through the tracks from the tracker
+                for track in tracker.tracker.tracks:
+                    track_id = track.track_id
+                    hits = track.hits
+                    x1, y1, x2, y2 = track.to_tlbr()  # Get bounding box coordinates in (x1, y1, x2, y2) format
+                    centroid_x = int((x1 + x2) / 2)  # Calculate centroid x-coordinate
+                    centroid_y = int(y2)  # Calculate centroid y-coordinate
 
-                            # Update Kalman filter with new measurement
-                            update_measurement(kalman, center_x, center_y)
+                    # Append centroid coordinates to history
+                    centroid_history[perspective][track_id].append((centroid_x, centroid_y))
 
-                            # Draw predicted position on annotated frame
-                            cv2.circle(annotated_frame, (int(predicted_x), int(predicted_y)), 5, (255, 0, 0), -1)
+                    # Draw path for each track
+                    for point1, point2 in zip(centroid_history[perspective][track_id], centroid_history[perspective][track_id][1:]):
+                        cv2.line(transformed_frame, point1, point2, colors[track_id % len(colors)], 2)  # Use colors list
 
-                # Display the annotated frame in the perspective window
+                    # Draw bounding box
+                    cv2.rectangle(transformed_frame, (int(x1), int(y1)), (int(x2), int(y2)), colors[track_id % len(colors)], 2)  # Use colors list
+
+                    # Draw track ID
+                    cv2.putText(transformed_frame, f"ID: {track_id}", (int(x1) + 10, int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2, cv2.LINE_AA)
+
+                # Update the person count based on the number of unique track IDs
+                person_count = len(centroid_history[perspective])
+
                 if perspective == "rightmost":
-                    # Define the region of interest to display only the right portion of the frame
-                    roi_width = annotated_frame.shape[1] // 2
-                    overlap = 50  # Adjust this value for the desired overlap
-                    roi = annotated_frame[:, roi_width - overlap :, :]
-
-                    # Display the ROI in the perspective window
+                    roi_width = transformed_frame.shape[1] // 2
+                    overlap = 50  
+                    roi = transformed_frame[:, roi_width - overlap:, :]
                     cv2.imshow(f"{perspective.capitalize()} Perspective", roi)
                 else:
-                    cv2.imshow(
-                        f"{perspective.capitalize()} Perspective", annotated_frame
-                    )
+                    cv2.imshow(f"{perspective.capitalize()} Perspective", transformed_frame)
 
-            # Update the previous frame for the next iteration
             previous_frames[perspective] = frame.copy()
 
-        # Check for key press to exit
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             break
-
     else:
-        # Break the loop if the end of the video is reached
         break
 
-# Release the video capture object and close all windows
 cap.release()
 cv2.destroyAllWindows()
