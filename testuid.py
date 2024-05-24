@@ -8,6 +8,10 @@ from deep_sort_pytorch.utils.parser import get_config
 from deep_sort_pytorch.deep_sort import DeepSort
 from deep_sort_pytorch.deep_sort.sort.tracker import Tracker
 from collections import defaultdict
+from Dependencies import download_files
+
+# Call the function to download the required files
+download_files.download_dependencies()
 
 # Check if a GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -94,7 +98,7 @@ bbox_colors = [(255, 0, 255)]  # Magenta
 motion_detected = {"front": False, "left": False, "right": False, "leftmost": False, "rightmost": False}
 
 # Open the video file
-video_path = "Test.mp4"
+video_path = "Dependencies/Test.mp4"
 cap = cv2.VideoCapture(video_path)
 
 # Get the width and height of the video frames

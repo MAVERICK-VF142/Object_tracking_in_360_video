@@ -87,7 +87,9 @@ trackers = {
     "rightmost": DeepSort(model_path=deep_sort_weights,max_age=5),
 }
 
-colors = [(255,0,255)]
+# Define colors for paths and bounding boxes
+path_colors = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 255), (0, 0, 255)]  # Yellow, Cyan, Green, Magenta, Red
+bbox_colors = [(255, 0, 255)]  # Magenta
 
 motion_detected = {"front": False, "left": False, "right": False, "leftmost": False, "rightmost": False}
 
@@ -99,6 +101,12 @@ cap = cv2.VideoCapture(video_path)
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+# Initialize a global track ID counter
+global_track_id = 0
+
+# Dictionary to map perspective track IDs to global track IDs
+global_id_map = defaultdict(dict)
+
 while cap.isOpened():
     success, frame = cap.read()
 
@@ -109,41 +117,29 @@ while cap.isOpened():
 
             if saliency > threshold:
                 motion_detected[perspective] = True
-                print("Saliency detected")
+                print(f"Saliency detected in {perspective}")
 
-                # Get the corresponding tracker for the current perspective
                 tracker = trackers[perspective]
 
-                # Perform object detection
                 results = model(transformed_frame, classes=[0, 2, 3], device=device)
 
                 if isinstance(results, list) and len(results) > 0:
-                    # Get the detected objects' coordinates from the first element (if results is a list)
                     coordinates = results[0].boxes.cpu().numpy()
 
-                    # Loop through the detected objects
                     for coord in coordinates:
-                        x1, y1, x2, y2 = coord.xyxy[0]  # Extract coordinates
-                        conf = coord.conf.item()  # Extract confidence
-                        cls = coord.cls.item()  # Extract class
-                        label = model.names[cls]  # Get the label of the detected object
+                        x1, y1, x2, y2 = coord.xyxy[0]
+                        conf = coord.conf.item()
+                        cls = coord.cls.item()
+                        label = model.names[cls]
 
-                        # Calculate the center of the object
                         center_x = (x1 + x2) / 2
                         center_y = (y1 + y2) / 2
 
-                        # Add center coordinates to the paths dictionary
                         object_id = f"{perspective}_{cls}_{conf:.2f}"
 
-                        # Map the (x, y) coordinates to 360-degree video coordinates
-                        theta = np.degrees(
-                            (center_x / frame_width) * 360
-                        )  # Convert x to theta in degrees
-                        phi = np.degrees(
-                            (center_y / frame_height) * 180
-                        )  # Convert y to phi in degrees
+                        theta = np.degrees((center_x / frame_width) * 360)
+                        phi = np.degrees((center_y / frame_height) * 180)
 
-                        # Draw bounding box and label with formatted coordinates
                         cv2.putText(
                             transformed_frame,
                             f"[x: {theta:.2f}, y: {phi:.2f}]",
@@ -154,41 +150,32 @@ while cap.isOpened():
                             2,
                         )
 
+                conf = results[0].boxes.conf.detach().cpu().numpy()
+                xywh = results[0].boxes.xywh.cpu().numpy()
 
-                for result in results:
-                    boxes = result.boxes  # Boxes object for bbox outputs
-                    conf = boxes.conf
-                    xywh = boxes.xywh  # box with xywh format, (N, 4)
-                
-                conf = conf.detach().cpu().numpy()
-                bboxes_xywh = xywh
-                bboxes_xywh = xywh.cpu().numpy()
-                bboxes_xywh = np.array(bboxes_xywh, dtype=float)
-                
-                tracks = tracker.update(bboxes_xywh, conf, transformed_frame, previous_frame)  # Include original frame
+                tracks = tracker.update(xywh, conf, transformed_frame, previous_frame)
 
-                # Loop through the tracks from the tracker
                 for track in tracker.tracker.tracks:
                     track_id = track.track_id
+                    if track_id not in global_id_map[perspective]:
+                        global_id_map[perspective][track_id] = global_track_id
+                        global_track_id += 1
+                    global_id = global_id_map[perspective][track_id]
+
                     hits = track.hits
-                    x1, y1, x2, y2 = track.to_tlbr()  # Get bounding box coordinates in (x1, y1, x2, y2) format
-                    centroid_x = int((x1 + x2) / 2)  # Calculate centroid x-coordinate
-                    centroid_y = int(y2)  # Calculate centroid y-coordinate
+                    x1, y1, x2, y2 = track.to_tlbr()
+                    centroid_x = int((x1 + x2) / 2)
+                    centroid_y = int(y2)
 
-                    # Append centroid coordinates to history
-                    centroid_history[perspective][track_id].append((centroid_x, centroid_y))
+                    centroid_history[perspective][global_id].append((centroid_x, centroid_y))
 
-                    # Draw path for each track
-                    for point1, point2 in zip(centroid_history[perspective][track_id], centroid_history[perspective][track_id][1:]):
-                        cv2.line(transformed_frame, point1, point2, colors[track_id % len(colors)], 2)  # Use colors list
+                    for point1, point2 in zip(centroid_history[perspective][global_id], centroid_history[perspective][global_id][1:]):
+                        cv2.line(transformed_frame, point1, point2, path_colors[global_id % len(path_colors)], 2)
 
-                    # Draw bounding box
-                    cv2.rectangle(transformed_frame, (int(x1), int(y1)), (int(x2), int(y2)), colors[track_id % len(colors)], 2)  # Use colors list
+                    cv2.rectangle(transformed_frame, (int(x1), int(y1)), (int(x2), int(y2)), bbox_colors[0], 2)
 
-                    # Draw track ID
-                    cv2.putText(transformed_frame, f"ID: {track_id}", (int(x1) + 10, int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2, cv2.LINE_AA)
+                    cv2.putText(transformed_frame, f"ID: {global_id}", (int(x1) + 10, int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2, cv2.LINE_AA)
 
-                # Update the person count based on the number of unique track IDs
                 person_count = len(centroid_history[perspective])
 
                 if perspective == "rightmost":

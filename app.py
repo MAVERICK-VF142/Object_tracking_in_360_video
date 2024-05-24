@@ -80,11 +80,11 @@ def detect_saliency(frame, previous_frame):
 
 # Initialize dictionary to store trackers for each perspective
 trackers = {
-    "front": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "left": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "right": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "leftmost": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "rightmost": DeepSort(model_path=deep_sort_weights,max_age=5),
+    "front": DeepSort(model_path=deep_sort_weights, max_age=10),
+    "left": DeepSort(model_path=deep_sort_weights, max_age=10),
+    "right": DeepSort(model_path=deep_sort_weights, max_age=10),
+    "leftmost": DeepSort(model_path=deep_sort_weights, max_age=10),
+    "rightmost": DeepSort(model_path=deep_sort_weights,max_age=10),
 }
 
 # Define colors for paths and bounding boxes
