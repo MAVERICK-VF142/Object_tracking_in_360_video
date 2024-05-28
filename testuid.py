@@ -23,7 +23,6 @@ else:
 
 # Load the YOLOv8 model and move it to the appropriate device
 model = YOLO("yolov9e.pt").to(device)
-class_names = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
 deep_sort_weights = 'deep_sort_pytorch/deep_sort/deep/checkpoint/ckpt.t7'
 
@@ -156,8 +155,9 @@ while cap.isOpened():
 
                 conf = results[0].boxes.conf.detach().cpu().numpy()
                 xywh = results[0].boxes.xywh.cpu().numpy()
+                clss = results[0].boxes.cls.cpu().numpy()
                 
-                tracks = tracker.update(xywh, conf, transformed_frame, previous_frame)
+                tracks = tracker.update(xywh, conf, clss,transformed_frame)
 
                 for track in tracker.tracker.tracks:
                     track_id = track.track_id
