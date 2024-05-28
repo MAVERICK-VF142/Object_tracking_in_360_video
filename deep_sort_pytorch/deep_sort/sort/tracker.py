@@ -55,11 +55,6 @@ class Tracker:
         for track in self.tracks:
             track.predict(self.kf)
 
-    def increment_ages(self):
-        for track in self.tracks:
-            track.increment_age()
-            track.mark_missed()
-
     def update(self, detections):
         """Perform measurement update and track management.
 
@@ -138,6 +133,6 @@ class Tracker:
     def _initiate_track(self, detection):
         mean, covariance = self.kf.initiate(detection.to_xyah())
         self.tracks.append(Track(
-            mean, covariance, self._next_id, self.n_init, self.max_age,detection.oid,
-            detection.feature))
+            mean, covariance, self._next_id, self.n_init, self.max_age,
+            detection.feature, detection.cls))
         self._next_id += 1

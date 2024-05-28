@@ -14,8 +14,7 @@ parser.add_argument("--gpu-id", default=0, type=int)
 args = parser.parse_args()
 
 # device
-device = "cuda:{}".format(
-    args.gpu_id) if torch.cuda.is_available() and not args.no_cuda else "cpu"
+device = "cuda:{}".format(args.gpu_id) if torch.cuda.is_available() and not args.no_cuda else "cpu"
 if torch.cuda.is_available() and not args.no_cuda:
     cudnn.benchmark = True
 
@@ -26,22 +25,20 @@ gallery_dir = os.path.join(root, "gallery")
 transform = torchvision.transforms.Compose([
     torchvision.transforms.Resize((128, 64)),
     torchvision.transforms.ToTensor(),
-    torchvision.transforms.Normalize(
-        [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    torchvision.transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 queryloader = torch.utils.data.DataLoader(
     torchvision.datasets.ImageFolder(query_dir, transform=transform),
     batch_size=64, shuffle=False
 )
 galleryloader = torch.utils.data.DataLoader(
-    torchvision.datasets.ImageFolder(gallery_dir, transform=transform),
+    torchvision.datas0ets.ImageFolder(gallery_dir, transform=transform),
     batch_size=64, shuffle=False
 )
 
 # net definition
 net = Net(reid=True)
-assert os.path.isfile(
-    "./checkpoint/ckpt.t7"), "Error: no checkpoint file found!"
+assert os.path.isfile("./checkpoint/ckpt.t7"), "Error: no checkpoint file found!"
 print('Loading from checkpoint/ckpt.t7')
 checkpoint = torch.load("./checkpoint/ckpt.t7")
 net_dict = checkpoint['net_dict']

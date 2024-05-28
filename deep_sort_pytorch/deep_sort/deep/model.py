@@ -8,15 +8,12 @@ class BasicBlock(nn.Module):
         super(BasicBlock, self).__init__()
         self.is_downsample = is_downsample
         if is_downsample:
-            self.conv1 = nn.Conv2d(
-                c_in, c_out, 3, stride=2, padding=1, bias=False)
+            self.conv1 = nn.Conv2d(c_in, c_out, 3, stride=2, padding=1, bias=False)
         else:
-            self.conv1 = nn.Conv2d(
-                c_in, c_out, 3, stride=1, padding=1, bias=False)
+            self.conv1 = nn.Conv2d(c_in, c_out, 3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(c_out)
         self.relu = nn.ReLU(True)
-        self.conv2 = nn.Conv2d(c_out, c_out, 3, stride=1,
-                               padding=1, bias=False)
+        self.conv2 = nn.Conv2d(c_out, c_out, 3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(c_out)
         if is_downsample:
             self.downsample = nn.Sequential(
@@ -73,8 +70,8 @@ class Net(nn.Module):
         # 128 16 8
         self.layer4 = make_layers(256, 512, 2, True)
         # 256 8 4
-        self.avgpool = nn.AvgPool2d((8, 4), 1)
-        # 256 1 1
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        # 256 1 1 
         self.reid = reid
         self.classifier = nn.Sequential(
             nn.Linear(512, 256),
@@ -105,5 +102,4 @@ if __name__ == '__main__':
     net = Net()
     x = torch.randn(4, 3, 128, 64)
     y = net(x)
-    import ipdb
-    ipdb.set_trace()
+

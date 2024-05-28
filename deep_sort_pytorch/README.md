@@ -8,7 +8,7 @@ Changes
 - refactor code
 - accerate detection by adding nms on gpu
 
-## Latest Update(07-22)
+## Update(07-22)
 Changes
 - bug fix (Thanks @JieChen91 and @yingsen1 for bug reporting).  
 - using batch for feature extracting for each frame, which lead to a small speed up.  
@@ -18,6 +18,24 @@ Futher improvement direction
 - Train detector on specific dataset rather than the official one.
 - Retrain REID model on pedestrain dataset for better performance.
 - Replace YOLOv3 detector with advanced ones.
+
+## Latest Update(23-05-2024)
+
+### tracking 
+
+- Added resnet network to the appearance feature extraction network in the deep folder
+
+- modified the NMS bug in the preprocessing.py and the updated covariance calculation bug in the kalmen_filter.py in the sort folder
+
+### detecting
+
+- Added YOLOv5 detector, aligned interface, and added YOLOv5 related yaml configuration files
+
+- The train.py, val.py and detect.py in the original YOLOv5 were deleted
+
+### deepsort
+
+- Added tracking target category, which can display both category and tracking ID simultaneously
 
 **Any contributions to this repository is welcome!**
 
@@ -67,7 +85,7 @@ cd deep_sort/deep/checkpoint
 # download ckpt.t7 from
 https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6 to this folder
 cd ../../../
-```  
+```
 
 4. Compile nms module
 ```bash
@@ -79,30 +97,63 @@ cd ../../..
 Notice:
 If compiling failed, the simplist way is to **Upgrade your pytorch >= 1.1 and torchvision >= 0.3" and you can avoid the troublesome compiling problems which are most likely caused by either `gcc version too low` or `libraries missing`.
 
-5. Run demo
+5. (Optional) Prepare third party submodules
+
+[fast-reid](https://github.com/JDAI-CV/fast-reid)
+
+This library supports bagtricks, AGW and other mainstream ReID methods through providing an fast-reid adapter.
+
+to prepare our bundled fast-reid, then follow instructions in its README to install it.
+
+Please refer to `configs/fastreid.yaml` for a sample of using fast-reid. See [Model Zoo](https://github.com/JDAI-CV/fast-reid/blob/master/docs/MODEL_ZOO.md) for available methods and trained models.
+
+[MMDetection](https://github.com/open-mmlab/mmdetection)
+
+This library supports Faster R-CNN and other mainstream detection methods through providing an MMDetection adapter.
+
+to prepare our bundled MMDetection, then follow instructions in its README to install it.
+
+Please refer to `configs/mmdet.yaml` for a sample of using MMDetection. See [Model Zoo](https://github.com/open-mmlab/mmdetection/blob/master/docs/model_zoo.md) for available methods and trained models.
+
+Run
+
 ```
-usage: python yolov3_deepsort.py VIDEO_PATH
-                                [--help]
-                                [--frame_interval FRAME_INTERVAL]
-                                [--config_detection CONFIG_DETECTION]
-                                [--config_deepsort CONFIG_DEEPSORT]
-                                [--display]
-                                [--display_width DISPLAY_WIDTH]
-                                [--display_height DISPLAY_HEIGHT]
-                                [--save_path SAVE_PATH]          
-                                [--cpu]          
+git submodule update --init --recursive
+```
+
+
+6. Run demo
+```
+usage: deepsort.py [-h]
+                   [--fastreid]
+                   [--config_fastreid CONFIG_FASTREID]
+                   [--mmdet]
+                   [--config_mmdetection CONFIG_MMDETECTION]
+                   [--config_detection CONFIG_DETECTION]
+                   [--config_deepsort CONFIG_DEEPSORT] [--display]
+                   [--frame_interval FRAME_INTERVAL]
+                   [--display_width DISPLAY_WIDTH]
+                   [--display_height DISPLAY_HEIGHT] [--save_path SAVE_PATH]
+                   [--cpu] [--camera CAM]
+                   VIDEO_PATH         
 
 # yolov3 + deepsort
-python yolov3_deepsort.py [VIDEO_PATH]
+python deepsort.py [VIDEO_PATH]
 
 # yolov3_tiny + deepsort
-python yolov3_deepsort.py [VIDEO_PATH] --config_detection ./configs/yolov3_tiny.yaml
+python deepsort.py [VIDEO_PATH] --config_detection ./configs/yolov3_tiny.yaml
 
 # yolov3 + deepsort on webcam
-python3 yolov3_deepsort.py /dev/video0 --camera 0
+python3 deepsort.py /dev/video0 --camera 0
 
 # yolov3_tiny + deepsort on webcam
-python3 yolov3_deepsort.py /dev/video0 --config_detection ./configs/yolov3_tiny.yaml --camera 0
+python3 deepsort.py /dev/video0 --config_detection ./configs/yolov3_tiny.yaml --camera 0
+
+# fast-reid + deepsort
+python deepsort.py [VIDEO_PATH] --fastreid [--config_fastreid ./configs/fastreid.yaml]
+
+# MMDetection + deepsort
+python deepsort.py [VIDEO_PATH] --mmdet [--config_mmdetection ./configs/mmdet.yaml]
 ```
 Use `--display` to enable display.  
 Results will be saved to `./output/results.avi` and `./output/results.txt`.
