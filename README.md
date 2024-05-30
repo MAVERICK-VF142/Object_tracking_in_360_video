@@ -1,5 +1,5 @@
 
-# YOLOv8 Object Tracking
+# YOLOv9 Object Tracking
 
 This repository contains a Python script for real-time object tracking using YOLOv8 and OpenCV. It allows you to select an object in a video frame, track it, and display its coordinates in real-time.
 
