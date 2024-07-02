@@ -27,45 +27,44 @@ model = YOLO("yolov9e.pt").to(device)
 deep_sort_weights = 'deep_sort_pytorch/deep_sort/deep/checkpoint/ckpt.t7'
 
 # Define the field of view (FOV) for different perspectives
-fov_degrees = {
-    "front": 90,
-    "left": 90,
-    "right": 90,
-    "leftmost": 90,
-    "rightmost": 90,
-}
+fov_degrees = 60  # Each FOV is 60 degrees
 
-threshold = random.randint(120, 140)
+threshold = 0 #random.randint(120, 140)
 print("Threshold for motion detection:", threshold)
 
 # Initialize previous frames for motion-based saliency for each perspective
 previous_frames = {
-    "front": None,
-    "left": None,
-    "right": None,
-    "leftmost": None,
-    "rightmost": None,
+    "1": None,
+    "2": None,
+    "3": None,
+    "4": None,
+    "5": None,
+    "6": None,
 }
 
 # Initialize dictionary to store centroid history for each track and each FOV
 centroid_history = defaultdict(lambda: defaultdict(list))
 
 def transform_perspective(frame, perspective):
-    if perspective == "front":
-        fov_center = {"x": frame_width // 2, "y": frame_height // 2}
-    elif perspective == "left":
-        fov_center = {"x": frame_width // 4, "y": frame_height // 2}
-    elif perspective == "right":
-        fov_center = {"x": 3 * frame_width // 4, "y": frame_height // 2}
-    elif perspective == "leftmost":
-        fov_center = {"x": frame_width // 8, "y": frame_height // 2}
-    elif perspective == "rightmost":
-        fov_center = {"x": 7 * frame_width // 8, "y": frame_height // 2}
+    frame_height, frame_width = frame.shape[:2]
+    
+    if perspective == "1":
+        fov_center = {"x": frame_width // 12, "y": frame_height // 2}
+    elif perspective == "2":
+        fov_center = {"x": 3 * frame_width // 12, "y": frame_height // 2}
+    elif perspective == "3":
+        fov_center = {"x": 5 * frame_width // 12, "y": frame_height // 2}
+    elif perspective == "4":
+        fov_center = {"x": 7 * frame_width // 12, "y": frame_height // 2}
+    elif perspective == "5":
+        fov_center = {"x": 9 * frame_width // 12, "y": frame_height // 2}
+    elif perspective == "6":
+        fov_center = {"x": 11 * frame_width // 12, "y": frame_height // 2}
     else:
         raise ValueError("Invalid perspective")
 
-    fov_width = int(frame_width * fov_degrees[perspective] / 360)
-    fov_height = int(frame_height * fov_degrees[perspective] / 360)
+    fov_width = int(frame_width * fov_degrees / 360)
+    fov_height = int(frame_height * fov_degrees / 360)
 
     perspective_frame = frame[
         fov_center["y"] - fov_height // 2 : fov_center["y"] + fov_height // 2,
@@ -83,18 +82,19 @@ def detect_saliency(frame, previous_frame):
 
 # Initialize dictionary to store trackers for each perspective
 trackers = {
-    "front": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "left": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "right": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "leftmost": DeepSort(model_path=deep_sort_weights, max_age=5),
-    "rightmost": DeepSort(model_path=deep_sort_weights,max_age=5),
+    "1": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "2": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "3": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "4": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "5": DeepSort(model_path=deep_sort_weights, max_age=5),
+    "6": DeepSort(model_path=deep_sort_weights, max_age=5),
 }
 
 # Define colors for paths and bounding boxes
 path_colors = [(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 255), (0, 0, 255)]  # Yellow, Cyan, Green, Magenta, Red
 bbox_colors = [(255, 0, 255)]  # Magenta
 
-motion_detected = {"front": False, "left": False, "right": False, "leftmost": False, "rightmost": False}
+motion_detected = {"1": False, "2": False, "3": False, "4": False, "5": False, "6": False}
 
 # Open the video file
 video_path = "Dependencies/Test.mp4"
@@ -157,7 +157,7 @@ while cap.isOpened():
                 xywh = results[0].boxes.xywh.cpu().numpy()
                 clss = results[0].boxes.cls.cpu().numpy()
                 
-                tracks = tracker.update(xywh, conf, clss,transformed_frame)
+                tracks = tracker.update(xywh, conf, clss, transformed_frame)
 
                 for track in tracker.tracker.tracks:
                     track_id = track.track_id
@@ -182,7 +182,7 @@ while cap.isOpened():
 
                 person_count = len(centroid_history[perspective])
 
-                if perspective == "rightmost":
+                if perspective == "6":
                     roi_width = transformed_frame.shape[1] // 2
                     overlap = 50  
                     roi = transformed_frame[:, roi_width - overlap:, :]
