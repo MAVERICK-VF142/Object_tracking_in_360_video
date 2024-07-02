@@ -29,7 +29,7 @@ deep_sort_weights = 'deep_sort_pytorch/deep_sort/deep/checkpoint/ckpt.t7'
 # Define the field of view (FOV) for different perspectives
 fov_degrees = 60  # Each FOV is 60 degrees
 
-threshold = 0 #random.randint(120, 140)
+threshold = random.randint(120, 140)
 print("Threshold for motion detection:", threshold)
 
 # Initialize previous frames for motion-based saliency for each perspective
@@ -45,8 +45,12 @@ previous_frames = {
 # Initialize dictionary to store centroid history for each track and each FOV
 centroid_history = defaultdict(lambda: defaultdict(list))
 
+
 def transform_perspective(frame, perspective):
     frame_height, frame_width = frame.shape[:2]
+    
+    # Assuming each FOV covers 60 degrees
+    fov_degrees = 60  
     
     if perspective == "1":
         fov_center = {"x": frame_width // 12, "y": frame_height // 2}
@@ -60,18 +64,28 @@ def transform_perspective(frame, perspective):
         fov_center = {"x": 9 * frame_width // 12, "y": frame_height // 2}
     elif perspective == "6":
         fov_center = {"x": 11 * frame_width // 12, "y": frame_height // 2}
+        # Extend the FOV more to the left for the sixth perspective
+        fov_width = int(frame_width * fov_degrees / 180)  # 120 degrees FOV width
+        fov_height = int(frame_height * fov_degrees / 360)  # 60 degrees FOV height
+        perspective_frame = frame[
+            fov_center["y"] - fov_height // 2 : fov_center["y"] + fov_height // 2,
+            fov_center["x"] - fov_width //2 : fov_center["x"] + fov_width // 2,
+        ]
+        return perspective_frame
     else:
         raise ValueError("Invalid perspective")
 
-    fov_width = int(frame_width * fov_degrees / 360)
-    fov_height = int(frame_height * fov_degrees / 360)
-
+    # Normal FOV extraction for perspectives 1 to 5
+    fov_width = int(frame_width * fov_degrees / 360)  # 60 degrees FOV width
+    fov_height = int(frame_height * fov_degrees / 360)  # 60 degrees FOV height
     perspective_frame = frame[
         fov_center["y"] - fov_height // 2 : fov_center["y"] + fov_height // 2,
         fov_center["x"] - fov_width // 2 : fov_center["x"] + fov_width // 2,
     ]
 
     return perspective_frame
+
+
 
 def detect_saliency(frame, previous_frame):
     if previous_frame is None or previous_frame.size == 0:
