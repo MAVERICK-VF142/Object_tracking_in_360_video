@@ -27,10 +27,10 @@ This repository contains a Python script for real-time object tracking using YOL
 
 ## Usage
 
-1. Run the script `object_tracking.py`:
+1. Run the script `app.py`:
 
    ```
-   python object_tracking.py
+   python app.py
    ```
 
 2. Select an object in the video frame by clicking on it. The script will track the selected object and display its coordinates in real-time.
