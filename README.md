@@ -110,7 +110,7 @@ Thank you for contributing to this project!
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contributors
+## ❤️ Contributors
 
 [![Contributors](https://contrib.rocks/image?repo=MAVERICK-VF142/Object_tracking_in_360_video)](https://github.com/MAVERICK-VF142/Object_tracking_in_360_video/graphs/contributors)
 
