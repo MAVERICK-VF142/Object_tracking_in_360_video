@@ -13,7 +13,7 @@ This repository contains a Python script for real-time object tracking using YOL
 - [Usage](#️-usage)
 - [Contributing](#️-contributing)
 - [License](#-license)
-- [Contributors](#️-our-valuable-contributors-%EF%B8%8F%EF%B8%8F)
+- [Contributors](#️-our-valuable-contributors)
 
 ## 🚀 Features
 
