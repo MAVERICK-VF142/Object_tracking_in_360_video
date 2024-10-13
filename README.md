@@ -1,8 +1,18 @@
-# 🤖 YOLOv10 Object Tracking
+# 🤖 YOLOv10 Object Tracking 
 
-![Repo Stars](https://img.shields.io/github/stars/MAVERICK-VF142/Object_tracking_in_360_video) ![Forks](https://img.shields.io/github/forks/MAVERICK-VF142/Object_tracking_in_360_video) ![Issues](https://img.shields.io/github/issues/MAVERICK-VF142/Object_tracking_in_360_video)
+<div style="text-align: center;">
+    <img src="https://github.com/user-attachments/assets/ad6c0817-c112-4936-86a9-578190e5fd89" alt="welcome-gif-24" width="300" />
+</div>
 
+## 🌍 Get Ready to Track Everything! Step into the YOLOv10 Object Tracking Universe! 🌌
+<div style="display: flex; align-items: center;">
+    <img src="https://img.shields.io/github/stars/MAVERICK-VF142/Object_tracking_in_360_video" alt="Repo Stars" width="120" style="margin-right: 10px;" />
+    <img src="https://img.shields.io/github/forks/MAVERICK-VF142/Object_tracking_in_360_video" alt="Forks" width="120" style="margin-right: 10px;" />
+    <img src="https://img.shields.io/github/issues/MAVERICK-VF142/Object_tracking_in_360_video" alt="Issues" width="120" style="margin-right: 10px;" />
+
+</div>
 This repository contains a Python script for real-time object tracking using YOLOv10 and OpenCV. It allows you to select an object in a video frame, track it, and display its coordinates in real-time.
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
 ## 📋 Table of Contents
 
@@ -14,15 +24,24 @@ This repository contains a Python script for real-time object tracking using YOL
 - [License](#-license)
 - [Contributors](#%EF%B8%8F-contributors)
 
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
-## 🚀 Features
+
+# 🚀 Features
+## 🔍 Dive into Our Features! Unleash the Power of This Project! 💥
+
+
+<div style="text-align: center;">
+    <img src="https://github.com/user-attachments/assets/76272400-9440-47ba-b662-b351304c952c" alt="track_object_animated" width="300"/>
+</div>
 
 - **Real-time object tracking** using YOLOv10 and OpenCV.
 - **User-friendly interface** for selecting objects in video frames.
 - **Real-time display** of object coordinates.
 - **360° video support** for enhanced video experiences.
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
-## 📖 Requirements
+# 📖 Requirements
 
     easydict==1.13
     gdown==5.2.0
@@ -36,8 +55,10 @@ This repository contains a Python script for real-time object tracking using YOL
     torch==2.3.0
     torchvision==0.18.0
     ultralytics
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
-## 📦 Installation
+# 📦 Installation
+## 🚀 Ready, Set, Install! Let’s Get This Party Started! 🎉
 
 1. Clone this repository to your local machine:
 
@@ -50,8 +71,10 @@ This repository contains a Python script for real-time object tracking using YOL
    ```
 
 3. Download the YOLOv10 model weights (`yolov10e.pt`) and place them in the root directory of this repository.
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
-## ▶️ Usage
+# ▶️ Usage
+## 💡 Let’s Dive Into the Magic! Here’s How to Use This Code! ✨
 
 1. Run the script `app.py`:
 
@@ -61,8 +84,12 @@ This repository contains a Python script for real-time object tracking using YOL
 2. Select an object in the video frame by clicking on it. The script will track the selected object and display its coordinates in real-time.
 
 3. Press 'q' to quit the application.
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
-## 🛠️ Contributing
+# 🛠️ Contributing
+## 🤝 Your Ideas Matter! Help Us Shape the Future of This Project!
+
+
 
 Contributions are welcome! Here's how you can contribute:
 
@@ -93,11 +120,22 @@ Contributions are welcome! Here's how you can contribute:
    **Note:** Please ensure your pull request adheres to the repository's contribution guidelines.
 Thank you for contributing to this project!
 
-## 📜 License
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
+# 📜 License
+
+## 🔑 Unlocking the Code: Understanding Our Licensing! 🔓
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## ❤️ Contributors
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
+
+# ❤️ Contributors
+## 🌟 A Big Shoutout to Our Rockstars! Your Contributions Make Us Shine! 🎉
+
+<img src="https://github.com/user-attachments/assets/c6618a17-176e-4bb6-9f51-b3bf235c3e46" alt="happy-dancing" width="200" />
+
+
 
 [![Contributors](https://contrib.rocks/image?repo=MAVERICK-VF142/Object_tracking_in_360_video)](https://github.com/MAVERICK-VF142/Object_tracking_in_360_video/graphs/contributors)
 
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
