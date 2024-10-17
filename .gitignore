@@ -1,3 +1,6 @@
 /Test.mp4
 /yolov9e.pt
 *.mp4
+.venv
+__pycache__/
+boundary_tracking.log
