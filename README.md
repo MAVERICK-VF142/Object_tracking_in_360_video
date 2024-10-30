@@ -44,18 +44,12 @@
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
 
 
-Happy Coding! 🚀
 
 ## 🌍 Get Ready to Track Everything! Step into the YOLOv10 Object Tracking Universe! 🌌
 
-<div style="display: flex; align-items: center;">
-    <img src="https://img.shields.io/github/stars/MAVERICK-VF142/Object_tracking_in_360_video" alt="Repo Stars" width="120" style="margin-right: 10px;" />
-    <img src="https://img.shields.io/github/forks/MAVERICK-VF142/Object_tracking_in_360_video" alt="Forks" width="120" style="margin-right: 10px;" />
-    <img src="https://img.shields.io/github/issues/MAVERICK-VF142/Object_tracking_in_360_video" alt="Issues" width="120" style="margin-right: 10px;" />
-
-</div>
 This repository contains a Python script for real-time object tracking using YOLOv10 and OpenCV. It allows you to select an object in a video frame, track it, and display its coordinates in real-time.
-<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
+
+
 
 ## 📋 Table of Contents
 
