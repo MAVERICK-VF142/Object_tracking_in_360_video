@@ -189,3 +189,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [![Contributors](https://contrib.rocks/image?repo=MAVERICK-VF142/Object_tracking_in_360_video)](https://github.com/MAVERICK-VF142/Object_tracking_in_360_video/graphs/contributors)
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
+
+## Stargazers ❤️
+
+<div align='left'>
+
+[![Stargazers repo roster for @MAVERICK-VF142/Object_tracking_in_360_video](https://reporoster.com/stars/dark/MAVERICK-VF142/Object_tracking_in_360_video)](https://github.com/MAVERICK-VF142/Object_tracking_in_360_video/stargazers)
+
+
+</div>
+
+## Forkers ❤️
+
+[![Forkers repo roster for @MAVERICK-VF142/Object_tracking_in_360_video](https://reporoster.com/forks/dark/MAVERICK-VF142/Object_tracking_in_360_video)](https://github.com/MAVERICK-VF142/Object_tracking_in_360_video/network/members)
+
+
+
+
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
