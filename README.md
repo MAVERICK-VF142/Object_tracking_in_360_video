@@ -1,19 +1,55 @@
-# 🤖 YOLOv10 Object Tracking
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=25&pause=1000&color=F75C7E&center=true&width=900&lines=%23+%F0%9F%A4%96+YOLOv10+Object+Tracking)](https://git.io/typing-svg)
+<br>
 
-<div style="text-align: center;">
-    <img src="https://github.com/user-attachments/assets/ad6c0817-c112-4936-86a9-578190e5fd89" alt="welcome-gif-24" width="300" />
-</div>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ad6c0817-c112-4936-86a9-578190e5fd89" alt="welcome-gif-24" width="300" />
+</p>
+
+
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
+
+
+## 📋 Participating Programs
+
+| Program               | Logo                                                       | Description                                                                                                 |
+|-----------------------|------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| GSSoC'2024-Extd       | <img src="assets/GSSoC-Ext.png" width="120px" alt="GSSoC Logo">       | A coding period from October 1st to October 30th, inviting contributions and providing a rewarding experience. |
+| Hacktoberfest 2024    | <img src="assets/hacktoberfest.png" width="120px" alt="Hacktoberfest Logo"> | Hacktoberfest celebrates open-source, inviting all levels to participate throughout October.                |
+
+---
+
+## 📊 Project Metrics
+
+<table align="center">
+    <thead align="center">
+        <tr>
+            <td><b>🌟 Stars</b></td>
+            <td><b>🍴 Forks</b></td>
+            <td><b>🐛 Issues</b></td>
+            <td><b>🔔 Open PRs</b></td>
+            <td><b>🔕 Closed PRs</b></td>
+        </tr>
+     </thead>
+    <tbody>
+         <tr>
+            <td><img alt="Stars" src="https://img.shields.io/github/stars/MAVERICK-VF142/Object_tracking_in_360_video?style=flat&logo=github"/></td>
+            <td><img alt="Forks" src="https://img.shields.io/github/forks/MAVERICK-VF142/Object_tracking_in_360_video?style=flat&logo=github"/></td>
+            <td><img alt="Issues" src="https://img.shields.io/github/issues/MAVERICK-VF142/Object_tracking_in_360_video?style=flat&logo=github"/></td>
+            <td><img alt="Open Pull Requests" src="https://img.shields.io/github/issues-pr/MAVERICK-VF142/Object_tracking_in_360_video?style=flat&logo=github"/></td>
+            <td><img alt="Closed Pull Requests" src="https://img.shields.io/github/issues-pr-closed/MAVERICK-VF142/Object_tracking_in_360_video?style=flat&color=green&logo=github"/></td>
+        </tr>
+    </tbody>
+</table>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
+
+
 
 ## 🌍 Get Ready to Track Everything! Step into the YOLOv10 Object Tracking Universe! 🌌
 
-<div style="display: flex; align-items: center;">
-    <img src="https://img.shields.io/github/stars/MAVERICK-VF142/Object_tracking_in_360_video" alt="Repo Stars" width="120" style="margin-right: 10px;" />
-    <img src="https://img.shields.io/github/forks/MAVERICK-VF142/Object_tracking_in_360_video" alt="Forks" width="120" style="margin-right: 10px;" />
-    <img src="https://img.shields.io/github/issues/MAVERICK-VF142/Object_tracking_in_360_video" alt="Issues" width="120" style="margin-right: 10px;" />
-
-</div>
 This repository contains a Python script for real-time object tracking using YOLOv10 and OpenCV. It allows you to select an object in a video frame, track it, and display its coordinates in real-time.
-<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="900">
+
+
 
 ## 📋 Table of Contents
 
