@@ -17,9 +17,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Authenticate GitHub CLI with ACTION_TOKEN
-        run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
-
       - name: Get list of open issues
         id: get_issues
         run: |
@@ -27,6 +24,8 @@ jobs:
           echo "issues=$issues" >> $GITHUB_ENV
 
       - name: Send reminders for stale issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REMINDER_DAYS=7
           current_date=$(date +%s)
@@ -43,6 +42,6 @@ jobs:
 
             if [ "$diff_days" -ge "$REMINDER_DAYS" ]; then
               echo "Sending reminder to issue #$issue_number"
-              gh issue comment "$issue_number" --body "Hi @${issue_author}, this is a friendly reminder that your issue has been inactive for the last $REMINDER_DAYS days. Please provide an update if possible. Thank you!"
+              gh issue comment "$issue_number" --body "Hi @${issue_author}, this is a friendly reminder that your issue has been inactive for the last $REMINDER_DAYS days. Please provide an update if possible. Thank you!" --repo $GITHUB_REPOSITORY
             fi
           done
