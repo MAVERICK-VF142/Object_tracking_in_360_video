@@ -8,28 +8,39 @@ jobs:
   reminder:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Step 2: Comment on open issues using GITHUB_TOKEN
       - name: Comment on open issues
         uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.ACTION_TOKEN }}  # Ensure your PAT has the correct scopes
+          github-token: ${{ secrets.ACTION_TOKEN }}  # Using the default GITHUB_TOKEN here
           script: |
             const { data: issues } = await github.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'open'
+              state: 'open',
             });
 
+            if (issues.length === 0) {
+              console.log("No open issues found.");
+              return;
+            }
+
+            // Loop over each open issue
             for (const issue of issues) {
               const assignees = issue.assignees.map(assignee => '@' + assignee.login).join(', ') || 'None';
               const issueComment = `Hi there! This issue is still open. We are looking forward to your response.\nAssignees: ${assignees}`;
               
+              // Create a comment on each open issue
               await github.issues.createComment({
                 issue_number: issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: issueComment
+                body: issueComment,
               });
+
+              console.log(`Commented on issue #${issue.number}`);
             }
