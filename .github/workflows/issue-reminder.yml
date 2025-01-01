@@ -1,13 +1,13 @@
 name: Issue Reminder
 
 permissions:
-  issues: write  # Allow the action to write comments on issues
-  contents: read  # Allow access to repo contents
+  issues: write  # Required for posting comments on issues
+  contents: read  # Required for reading repository contents
 
 on:
   schedule:
     - cron: '0 0 * * *'  # Runs once a day at midnight UTC
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual trigger as well
 
 jobs:
   send-reminder:
@@ -20,10 +20,10 @@ jobs:
       - name: Set up GitHub CLI
         uses: cli/cli@v2.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.ACTION_TOKEN }}  # Use your custom token here
 
-      - name: Authenticate GitHub CLI
-        run: gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+      - name: Authenticate GitHub CLI with ACTION_TOKEN
+        run: gh auth login --with-token <<< ${{ secrets.ACTION_TOKEN }}  # Authenticate with ACTION_TOKEN
 
       - name: Get list of open issues
         id: get_issues
