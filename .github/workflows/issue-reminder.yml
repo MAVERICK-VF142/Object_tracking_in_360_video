@@ -1,18 +1,18 @@
-
 name: 'open-issue reminder'
 
 on:
   schedule:
-    - cron: '15 4 * * *' 
+    - cron: '15 4 * * *'  # This runs daily at 4:15 AM UTC
+
 jobs:
-  welcome:
+  reminder:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Run script
-        uses: actions/github-script@v4
+      - name: Comment on open issues
+        uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -21,9 +21,11 @@ jobs:
               repo: context.repo.repo,
               state: 'open'
             });
+
             for (const issue of issues) {
-              const issueComment = `Hi there! This issue is still open. We are looking forward to your response.
-              Assignees: ${issue.assignees.map(assignee => '@' + assignee.login).join(', ') || 'None'}`;
+              const assignees = issue.assignees.map(assignee => '@' + assignee.login).join(', ') || 'None';
+              const issueComment = `Hi there! This issue is still open. We are looking forward to your response.\nAssignees: ${assignees}`;
+              
               await github.issues.createComment({
                 issue_number: issue.number,
                 owner: context.repo.owner,
