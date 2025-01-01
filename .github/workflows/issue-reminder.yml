@@ -16,7 +16,7 @@ jobs:
       - name: Comment on open issues
         uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.ACTION_TOKEN }}  # Using the default GITHUB_TOKEN here
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
           script: |
             const { data: issues } = await github.issues.listForRepo({
               owner: context.repo.owner,
