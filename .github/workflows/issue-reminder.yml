@@ -1,46 +1,56 @@
-name: 'open-issue reminder'
+name: Issue Reminder
 
 on:
   schedule:
-    - cron: '15 4 * * *'  # This runs daily at 4:15 AM UTC
+    - cron: '0 0 * * *'  # Runs once a day at midnight UTC
+  workflow_dispatch:  # Allows manual trigger as well
 
 jobs:
-  reminder:
+  send-reminder:
     runs-on: ubuntu-latest
+
     steps:
-      # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Comment on open issues using GITHUB_TOKEN
-      - name: Comment on open issues
-        uses: actions/github-script@v5
+      - name: Set up GitHub CLI
+        uses: cli/cli@v2.0.0
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}  # Use the default GitHub token
-          script: |
-            const { data: issues } = await github.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-            });
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
-            if (issues.length === 0) {
-              console.log("No open issues found.");
-              return;
+      - name: Get list of open issues
+        id: get_issues
+        run: |
+          issues=$(gh issue list --state open --json number,updatedAt,author --limit 100)
+          echo "issues=$issues" >> $GITHUB_ENV
+
+      - name: Send reminders for stale issues
+        run: |
+          # Set the reminder interval in days
+          REMINDER_DAYS=7
+
+          # Get the current date (in Unix timestamp format)
+          current_date=$(date +%s)
+
+          # Loop through the issues and send reminders for stale ones
+          for issue in $(echo "$issues" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${issue} | base64 --decode | jq -r ${1}
             }
 
-            // Loop over each open issue
-            for (const issue of issues) {
-              const assignees = issue.assignees.map(assignee => '@' + assignee.login).join(', ') || 'None';
-              const issueComment = `Hi there! This issue is still open. We are looking forward to your response.\nAssignees: ${assignees}`;
-              
-              // Create a comment on each open issue
-              await github.issues.createComment({
-                issue_number: issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: issueComment,
-              });
+            issue_number=$(_jq '.number')
+            issue_updated_at=$(_jq '.updatedAt')
+            issue_author=$(_jq '.author.login')
 
-              console.log(`Commented on issue #${issue.number}`);
-            }
+            # Convert issue updated date to Unix timestamp
+            updated_at_timestamp=$(date -d $issue_updated_at +%s)
+
+            # Calculate the difference in days
+            diff_days=$(( (current_date - updated_at_timestamp) / 86400 ))
+
+            # If the issue hasn't been updated in the last $REMINDER_DAYS, send a reminder
+            if [ "$diff_days" -ge "$REMINDER_DAYS" ]; then
+              echo "Sending reminder to issue #$issue_number"
+              gh issue comment "$issue_number" --body "Hi @${issue_author}, this is a friendly reminder that your issue has been inactive for the last $REMINDER_DAYS days. Please provide an update if possible. Thank you!"
+            fi
+          done
